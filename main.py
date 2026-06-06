@@ -94,7 +94,7 @@ class AliasGame:
             "— за пропуск слова снимается 1 балл (но не ниже 0)\n\n"
         )
 
-        tk.Label(main_frame, text="Правила игры", font=("Arial", 36, "bold")).pack(pady=20)
+        tk.Label(main_frame, text="Rules", font=("Arial", 36, "bold")).pack(pady=20)
         tk.Label(main_frame, text=rules, font=("Arial", 20), justify="left").pack(pady=20)
 
         word_info = f"📚 В игре загружено слов: {len(WORDS)}"
@@ -167,16 +167,13 @@ class AliasGame:
         self.clear_window()
         main_frame = tk.Frame(self.root)
         main_frame.pack(expand=True)
-
         tk.Label(main_frame, text="Введите имена игроков", font=("Arial", 32, "bold")).pack(pady=30)
 
         canvas_frame = tk.Frame(main_frame)
         canvas_frame.pack(fill=tk.BOTH, expand=True, pady=20)
-
         canvas = tk.Canvas(canvas_frame, height=400)
         scrollbar = tk.Scrollbar(canvas_frame, orient="vertical", command=canvas.yview)
         scrollable_frame = tk.Frame(canvas)
-
         scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
@@ -196,18 +193,15 @@ class AliasGame:
 
         buttons_frame = tk.Frame(main_frame)
         buttons_frame.pack(pady=20)
-
         tk.Button(buttons_frame, text="Назад", font=("Arial", 18), bg="gray", fg="white",
                   command=self.game_settings_menu).pack(side=tk.LEFT, padx=10)
-
         tk.Button(buttons_frame, text="Далее", font=("Arial", 18), bg="green", fg="white",
-                  command=self.placeholder_next).pack(side=tk.RIGHT, padx=10)
+                  command=self.save_player_names).pack(side=tk.RIGHT, padx=10)
 
     def enter_team_names(self):
         self.clear_window()
         main_frame = tk.Frame(self.root)
         main_frame.pack(expand=True)
-
         tk.Label(main_frame, text="Введите названия команд", font=("Arial", 32, "bold")).pack(pady=30)
 
         self.name_entries = []
@@ -222,20 +216,34 @@ class AliasGame:
 
         buttons_frame = tk.Frame(main_frame)
         buttons_frame.pack(pady=30)
-
         tk.Button(buttons_frame, text="Назад", font=("Arial", 18), bg="gray", fg="white",
                   command=self.game_settings_menu).pack(side=tk.LEFT, padx=10)
-
         tk.Button(buttons_frame, text="Далее", font=("Arial", 18), bg="green", fg="white",
-                  command=self.placeholder_next).pack(side=tk.RIGHT, padx=10)
+                  command=self.save_team_names).pack(side=tk.RIGHT, padx=10)
 
-    # Заглушка к кнопке Далее
-    def placeholder_next(self):
-        print("Интерфейс ввода сработал")
+
+    def save_player_names(self):
+        self.team_names = []
+        for entry in self.name_entries:
+            name = entry.get().strip() or "Игрок"
+            self.team_names.append(name)
+
+
+        print("Имена игроков успешно проверены и сохранены:", self.team_names)
+
+    def save_team_names(self):
+        self.team_names = []
+        for entry in self.name_entries:
+            name = entry.get().strip() or "Команда"
+            self.team_names.append(name)
+
+        # Временный вывод
+        print("Названия команд успешно проверены и сохранены:", self.team_names)
 
     def clear_window(self):
         for w in self.root.winfo_children():
             w.destroy()
+
 
 if __name__ == "__main__":
     root = tk.Tk()
