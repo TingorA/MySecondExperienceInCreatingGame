@@ -4,7 +4,6 @@ import random
 import os
 
 
-
 def load_words_from_file(filename="words.txt"):
     words = []
     if os.path.exists(filename):
@@ -103,46 +102,6 @@ class AliasGame:
 
         tk.Button(main_frame, text="Назад в меню", font=("Arial", 18), command=self.show_menu).pack(pady=20)
 
-    def show_game_turn(self):
-        turn_window = tk.Toplevel(self.root)
-        turn_window.title("Ход игры - ALIES")
-        turn_window.geometry("700x550")
-        turn_window.transient(self.root)
-        turn_window.grab_set()
-
-        turn_window.update_idletasks()
-        x = (turn_window.winfo_screenwidth() // 2) - (700 // 2)
-        y = (turn_window.winfo_screenheight() // 2) - (550 // 2)
-        turn_window.geometry(f"+{x}+{y}")
-
-        main_frame = tk.Frame(turn_window)
-        main_frame.pack(expand=True, fill=tk.BOTH, padx=20, pady=20)
-
-        tk.Label(main_frame, text="Ход игры", font=("Arial", 32, "bold")).pack(pady=20)
-
-        turn_desc = (
-            "📖 ОПИСАНИЕ ХОДА:\n\n"
-            "1️⃣ Задача объясняющего — объяснить слово, не называя его напрямую\n"
-            "2️⃣ Задача отгадывающих — угадать слово\n\n"
-            "✅ Если слово угадано → нажимайте «УГАДАЛИ» (+1 балл)\n"
-            "❌ Если слово сложное → нажимайте «ПРОПУСК» (-1 балл, но не ниже 0)\n"
-            "⏱️ На ход даётся ограниченное время\n"
-            "🎯 Побеждает тот, кто первым наберёт нужное количество слов\n\n"
-            "💡 Советы:\n"
-            "• Используйте синонимы, антонимы, ассоциации\n"
-            "• Можно объяснять жестами и мимикой\n"
-            "• Нельзя использовать однокоренные слова\n"
-            "• Нельзя переводить слово на другой язык\n\n"
-            f"📚 В игре {len(WORDS)} слов. Слова не повторяются в одной сессии"
-        )
-
-        text_widget = tk.Text(main_frame, font=("Arial", 14), wrap=tk.WORD, height=18)
-        text_widget.insert("1.0", turn_desc)
-        text_widget.config(state=tk.DISABLED)
-        text_widget.pack(expand=True, fill=tk.BOTH, pady=10)
-
-        tk.Button(main_frame, text="Закрыть", font=("Arial", 14), command=turn_window.destroy).pack(pady=20)
-
     def start_settings(self, mode):
         self.mode = mode
         self.game_settings_menu()
@@ -153,9 +112,63 @@ class AliasGame:
         main_frame = tk.Frame(self.root)
         main_frame.pack(expand=True)
 
-        tk.Label(main_frame, text="Настройки игры в разработке", font=("Arial", 32, "bold")).pack(pady=30)
-        tk.Button(main_frame, text="Назад в меню", font=("Arial", 18), bg="gray", fg="white",
-                  command=self.show_menu).pack(pady=40)
+        tk.Label(main_frame, text="НАСТРОЙКИ ИГРЫ", font=("Arial", 32, "bold")).pack(pady=30)
+
+        # Выбор времени
+        time_frame = tk.Frame(main_frame)
+        time_frame.pack(pady=15)
+        tk.Label(time_frame, text="Время раунда:", font=("Arial", 20)).pack(side=tk.LEFT, padx=15)
+        self.time_var = tk.IntVar(value=self.game_settings["round_time"])
+        for t in TIME_OPTIONS:
+            tk.Radiobutton(time_frame, text=f"{t} сек", font=("Arial", 16),
+                           variable=self.time_var, value=t).pack(side=tk.LEFT, padx=8)
+
+        # Выбор лимита очков
+        score_frame = tk.Frame(main_frame)
+        score_frame.pack(pady=15)
+        tk.Label(score_frame, text="Слов для победы:", font=("Arial", 20)).pack(side=tk.LEFT, padx=15)
+        self.score_var = tk.IntVar(value=self.game_settings["win_score"])
+        for s in SCORE_OPTIONS:
+            tk.Radiobutton(score_frame, text=str(s), font=("Arial", 16),
+                           variable=self.score_var, value=s).pack(side=tk.LEFT, padx=8)
+
+        # Выбор количества людей или команд в зависимости от режима
+        if self.mode == "solo":
+            players_frame = tk.Frame(main_frame)
+            players_frame.pack(pady=15)
+            tk.Label(players_frame, text="Количество игроков:", font=("Arial", 20)).pack(side=tk.LEFT, padx=15)
+            self.players_var = tk.IntVar(value=self.game_settings["player_count"])
+            for p in SOLO_PLAYER_OPTIONS:
+                tk.Radiobutton(players_frame, text=str(p), font=("Arial", 16),
+                               variable=self.players_var, value=p).pack(side=tk.LEFT, padx=8)
+        else:
+            teams_frame = tk.Frame(main_frame)
+            teams_frame.pack(pady=15)
+            tk.Label(teams_frame, text="Количество команд:", font=("Arial", 20)).pack(side=tk.LEFT, padx=15)
+            self.teams_var = tk.IntVar(value=self.game_settings["team_count"])
+            for t in TEAM_COUNT_OPTIONS:
+                tk.Radiobutton(teams_frame, text=str(t), font=("Arial", 16),
+                               variable=self.teams_var, value=t).pack(side=tk.LEFT, padx=8)
+
+        buttons_frame = tk.Frame(main_frame)
+        buttons_frame.pack(pady=40)
+
+        tk.Button(buttons_frame, text="Назад в меню", font=("Arial", 18), bg="gray", fg="white",
+                  command=self.show_menu).pack(side=tk.LEFT, padx=10)
+
+        tk.Button(buttons_frame, text="Далее", font=("Arial", 18), bg="green", fg="white",
+                  command=self.save_settings_and_continue).pack(side=tk.RIGHT, padx=10)
+
+    def save_settings_and_continue(self):
+        self.game_settings["round_time"] = self.time_var.get()
+        self.game_settings["win_score"] = self.score_var.get()
+
+        if self.mode == "solo":
+            self.game_settings["player_count"] = self.players_var.get()
+            print("Настройки сохранены для одиночной игры:", self.game_settings)
+        else:
+            self.game_settings["team_count"] = self.teams_var.get()
+            print("Настройки сохранены для командной игры:", self.game_settings)
 
     def clear_window(self):
         for w in self.root.winfo_children():
