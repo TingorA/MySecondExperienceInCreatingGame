@@ -108,54 +108,47 @@ class AliasGame:
 
     def game_settings_menu(self):
         self.clear_window()
-
         main_frame = tk.Frame(self.root)
         main_frame.pack(expand=True)
-
         tk.Label(main_frame, text="НАСТРОЙКИ ИГРЫ", font=("Arial", 32, "bold")).pack(pady=30)
 
-        # Выбор времени
         time_frame = tk.Frame(main_frame)
         time_frame.pack(pady=15)
         tk.Label(time_frame, text="Время раунда:", font=("Arial", 20)).pack(side=tk.LEFT, padx=15)
         self.time_var = tk.IntVar(value=self.game_settings["round_time"])
         for t in TIME_OPTIONS:
-            tk.Radiobutton(time_frame, text=f"{t} сек", font=("Arial", 16),
-                           variable=self.time_var, value=t).pack(side=tk.LEFT, padx=8)
+            tk.Radiobutton(time_frame, text=f"{t} сек", font=("Arial", 16), variable=self.time_var, value=t).pack(
+                side=tk.LEFT, padx=8)
 
-        # Выбор лимита очков
         score_frame = tk.Frame(main_frame)
         score_frame.pack(pady=15)
         tk.Label(score_frame, text="Слов для победы:", font=("Arial", 20)).pack(side=tk.LEFT, padx=15)
         self.score_var = tk.IntVar(value=self.game_settings["win_score"])
         for s in SCORE_OPTIONS:
-            tk.Radiobutton(score_frame, text=str(s), font=("Arial", 16),
-                           variable=self.score_var, value=s).pack(side=tk.LEFT, padx=8)
+            tk.Radiobutton(score_frame, text=str(s), font=("Arial", 16), variable=self.score_var, value=s).pack(
+                side=tk.LEFT, padx=8)
 
-        # Выбор количества людей или команд в зависимости от режима
         if self.mode == "solo":
             players_frame = tk.Frame(main_frame)
             players_frame.pack(pady=15)
             tk.Label(players_frame, text="Количество игроков:", font=("Arial", 20)).pack(side=tk.LEFT, padx=15)
             self.players_var = tk.IntVar(value=self.game_settings["player_count"])
             for p in SOLO_PLAYER_OPTIONS:
-                tk.Radiobutton(players_frame, text=str(p), font=("Arial", 16),
-                               variable=self.players_var, value=p).pack(side=tk.LEFT, padx=8)
+                tk.Radiobutton(players_frame, text=str(p), font=("Arial", 16), variable=self.players_var, value=p).pack(
+                    side=tk.LEFT, padx=8)
         else:
             teams_frame = tk.Frame(main_frame)
             teams_frame.pack(pady=15)
             tk.Label(teams_frame, text="Количество команд:", font=("Arial", 20)).pack(side=tk.LEFT, padx=15)
             self.teams_var = tk.IntVar(value=self.game_settings["team_count"])
             for t in TEAM_COUNT_OPTIONS:
-                tk.Radiobutton(teams_frame, text=str(t), font=("Arial", 16),
-                               variable=self.teams_var, value=t).pack(side=tk.LEFT, padx=8)
+                tk.Radiobutton(teams_frame, text=str(t), font=("Arial", 16), variable=self.teams_var, value=t).pack(
+                    side=tk.LEFT, padx=8)
 
         buttons_frame = tk.Frame(main_frame)
         buttons_frame.pack(pady=40)
-
         tk.Button(buttons_frame, text="Назад в меню", font=("Arial", 18), bg="gray", fg="white",
                   command=self.show_menu).pack(side=tk.LEFT, padx=10)
-
         tk.Button(buttons_frame, text="Далее", font=("Arial", 18), bg="green", fg="white",
                   command=self.save_settings_and_continue).pack(side=tk.RIGHT, padx=10)
 
@@ -165,15 +158,84 @@ class AliasGame:
 
         if self.mode == "solo":
             self.game_settings["player_count"] = self.players_var.get()
-            print("Настройки сохранены для одиночной игры:", self.game_settings)
+            self.enter_player_names()
         else:
             self.game_settings["team_count"] = self.teams_var.get()
-            print("Настройки сохранены для командной игры:", self.game_settings)
+            self.enter_team_names()
+
+    def enter_player_names(self):
+        self.clear_window()
+        main_frame = tk.Frame(self.root)
+        main_frame.pack(expand=True)
+
+        tk.Label(main_frame, text="Введите имена игроков", font=("Arial", 32, "bold")).pack(pady=30)
+
+        canvas_frame = tk.Frame(main_frame)
+        canvas_frame.pack(fill=tk.BOTH, expand=True, pady=20)
+
+        canvas = tk.Canvas(canvas_frame, height=400)
+        scrollbar = tk.Scrollbar(canvas_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas)
+
+        scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        self.name_entries = []
+        for i in range(self.game_settings["player_count"]):
+            frame = tk.Frame(scrollable_frame)
+            frame.pack(pady=8)
+            tk.Label(frame, text=f"Игрок {i + 1}:", font=("Arial", 16), width=12).pack(side=tk.LEFT, padx=10)
+            entry = tk.Entry(frame, font=("Arial", 16), width=25)
+            entry.insert(0, f"Игрок {i + 1}")
+            entry.pack(side=tk.LEFT)
+            self.name_entries.append(entry)
+
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        buttons_frame = tk.Frame(main_frame)
+        buttons_frame.pack(pady=20)
+
+        tk.Button(buttons_frame, text="Назад", font=("Arial", 18), bg="gray", fg="white",
+                  command=self.game_settings_menu).pack(side=tk.LEFT, padx=10)
+
+        tk.Button(buttons_frame, text="Далее", font=("Arial", 18), bg="green", fg="white",
+                  command=self.placeholder_next).pack(side=tk.RIGHT, padx=10)
+
+    def enter_team_names(self):
+        self.clear_window()
+        main_frame = tk.Frame(self.root)
+        main_frame.pack(expand=True)
+
+        tk.Label(main_frame, text="Введите названия команд", font=("Arial", 32, "bold")).pack(pady=30)
+
+        self.name_entries = []
+        for i in range(self.game_settings["team_count"]):
+            frame = tk.Frame(main_frame)
+            frame.pack(pady=10)
+            tk.Label(frame, text=f"Команда {i + 1}:", font=("Arial", 18)).pack(side=tk.LEFT, padx=10)
+            entry = tk.Entry(frame, font=("Arial", 18), width=25)
+            entry.insert(0, f"Команда {i + 1}")
+            entry.pack(side=tk.LEFT)
+            self.name_entries.append(entry)
+
+        buttons_frame = tk.Frame(main_frame)
+        buttons_frame.pack(pady=30)
+
+        tk.Button(buttons_frame, text="Назад", font=("Arial", 18), bg="gray", fg="white",
+                  command=self.game_settings_menu).pack(side=tk.LEFT, padx=10)
+
+        tk.Button(buttons_frame, text="Далее", font=("Arial", 18), bg="green", fg="white",
+                  command=self.placeholder_next).pack(side=tk.RIGHT, padx=10)
+
+    # Заглушка к кнопке Далее
+    def placeholder_next(self):
+        print("Интерфейс ввода сработал")
 
     def clear_window(self):
         for w in self.root.winfo_children():
             w.destroy()
-
 
 if __name__ == "__main__":
     root = tk.Tk()
