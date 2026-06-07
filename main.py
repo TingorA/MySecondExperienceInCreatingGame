@@ -94,7 +94,7 @@ class AliasGame:
             "— за пропуск слова снимается 1 балл (но не ниже 0)\n\n"
         )
 
-        tk.Label(main_frame, text="Rules", font=("Arial", 36, "bold")).pack(pady=20)
+        tk.Label(main_frame, text="Правила игры", font=("Arial", 36, "bold")).pack(pady=20)
         tk.Label(main_frame, text=rules, font=("Arial", 20), justify="left").pack(pady=20)
 
         word_info = f"📚 В игре загружено слов: {len(WORDS)}"
@@ -221,24 +221,64 @@ class AliasGame:
         tk.Button(buttons_frame, text="Далее", font=("Arial", 18), bg="green", fg="white",
                   command=self.save_team_names).pack(side=tk.RIGHT, padx=10)
 
-
     def save_player_names(self):
         self.team_names = []
         for entry in self.name_entries:
             name = entry.get().strip() or "Игрок"
             self.team_names.append(name)
-
-
-        print("Имена игроков успешно проверены и сохранены:", self.team_names)
+        self.start_color_selection()
 
     def save_team_names(self):
         self.team_names = []
         for entry in self.name_entries:
             name = entry.get().strip() or "Команда"
             self.team_names.append(name)
+        self.start_color_selection()
 
-        # Временный вывод
-        print("Названия команд успешно проверены и сохранены:", self.team_names)
+    def start_color_selection(self):
+        self.team_colors = []
+        self.current_selection_index = 0
+        self.show_color_selection_screen()
+
+    def show_color_selection_screen(self):
+        self.clear_window()
+        main_frame = tk.Frame(self.root)
+        main_frame.pack(expand=True)
+
+        current_name = self.team_names[self.current_selection_index]
+
+        tk.Label(main_frame, text="ВЫБОР ЦВЕТА ФИШКИ", font=("Arial", 32, "bold")).pack(pady=20)
+        tk.Label(main_frame, text=f"Игрок/Команда: {current_name}", font=("Arial", 24, "italic"), fg="blue").pack(
+            pady=10)
+        tk.Label(main_frame, text="Выберите один из доступных цветов:", font=("Arial", 18)).pack(pady=20)
+
+        grid_frame = tk.Frame(main_frame)
+        grid_frame.pack(pady=10)
+
+        for idx, color in enumerate(COLORS):
+            row = idx // 3
+            col = idx % 3
+
+            btn_text = COLOR_NAMES.get(color, color)
+
+            fg_color = "white" if color in ["red", "blue", "purple", "brown"] else "black"
+
+            btn = tk.Button(grid_frame, text=btn_text, font=("Arial", 16, "bold"),
+                            bg=color, fg=fg_color, width=15, height=2,
+                            command=lambda c=color: self.select_color_handler(c))
+            btn.grid(row=row, column=col, padx=10, pady=10)
+
+    def select_color_handler(self, color):
+        self.team_colors.append(color)
+        self.current_selection_index += 1
+
+        if self.current_selection_index < len(self.team_names):
+            self.show_color_selection_screen()
+        else:
+            self.placeholder_after_colors()
+
+    def placeholder_after_colors(self):
+        print("Все цвета выбраны:", list(zip(self.team_names, self.team_colors)))
 
     def clear_window(self):
         for w in self.root.winfo_children():
