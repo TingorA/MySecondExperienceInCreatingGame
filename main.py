@@ -279,10 +279,14 @@ class AliasGame:
         if self.current_selection_index < len(self.team_names):
             self.show_color_selection_screen()
         else:
-            self.placeholder_after_colors()
+            self.finish_setup_and_prepare_game()
 
-    def placeholder_after_colors(self):
-        print("Все цвета проверены и выбраны:", list(zip(self.team_names, self.team_colors)))
+    def finish_setup_and_prepare_game(self):
+        self.team_scores = [0] * len(self.team_names)
+        self.current_team = 0
+        self.used_words = []
+
+        print(f"Режим: {self.mode}, Игроки: {self.team_names}, Цвета: {self.team_colors}, Очки: {self.team_scores}")
 
     def clear_window(self):
         for w in self.root.winfo_children():
