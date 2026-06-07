@@ -261,11 +261,15 @@ class AliasGame:
 
             btn_text = COLOR_NAMES.get(color, color)
 
-            fg_color = "white" if color in ["red", "blue", "purple", "brown"] else "black"
+            if color in self.team_colors:
+                btn = tk.Button(grid_frame, text=f"{btn_text}\n(Занят)", font=("Arial", 14, "bold"),
+                                bg="gray", fg="white", width=15, height=2, state=tk.DISABLED)
+            else:
+                fg_color = "white" if color in ["red", "blue", "purple", "brown"] else "black"
+                btn = tk.Button(grid_frame, text=btn_text, font=("Arial", 16, "bold"),
+                                bg=color, fg=fg_color, width=15, height=2,
+                                command=lambda c=color: self.select_color_handler(c))
 
-            btn = tk.Button(grid_frame, text=btn_text, font=("Arial", 16, "bold"),
-                            bg=color, fg=fg_color, width=15, height=2,
-                            command=lambda c=color: self.select_color_handler(c))
             btn.grid(row=row, column=col, padx=10, pady=10)
 
     def select_color_handler(self, color):
@@ -278,7 +282,7 @@ class AliasGame:
             self.placeholder_after_colors()
 
     def placeholder_after_colors(self):
-        print("Все цвета выбраны:", list(zip(self.team_names, self.team_colors)))
+        print("Все цвета проверены и выбраны:", list(zip(self.team_names, self.team_colors)))
 
     def clear_window(self):
         for w in self.root.winfo_children():
