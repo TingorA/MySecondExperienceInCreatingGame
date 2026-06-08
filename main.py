@@ -13,7 +13,6 @@ def load_words_from_file(filename="words.txt"):
                 if word and not word.startswith("#"):
                     words.append(word)
     if not words:
-        print(f"Предупреждение: файл {filename} не найден. Используются стандартные слова.")
         words = ["самолёт", "компьютер", "дерево", "кофе", "программист", "телефон", "книга", "школа"]
     return words
 
@@ -63,13 +62,10 @@ class AliasGame:
 
         tk.Button(main_frame, text="Одиночная игра", font=("Arial", 20), width=25,
                   command=lambda: self.start_settings("solo")).pack(pady=10)
-
         tk.Button(main_frame, text="Командная игра", font=("Arial", 20), width=25,
                   command=lambda: self.start_settings("team")).pack(pady=10)
-
         tk.Button(main_frame, text="Правила игры", font=("Arial", 20), width=25,
                   command=self.show_rules).pack(pady=10)
-
         tk.Button(main_frame, text="Выход", font=("Arial", 20), width=25,
                   command=self.root.quit).pack(pady=10)
 
@@ -96,10 +92,7 @@ class AliasGame:
 
         tk.Label(main_frame, text="Правила игры", font=("Arial", 36, "bold")).pack(pady=20)
         tk.Label(main_frame, text=rules, font=("Arial", 20), justify="left").pack(pady=20)
-
-        word_info = f"📚 В игре загружено слов: {len(WORDS)}"
-        tk.Label(main_frame, text=word_info, font=("Arial", 14), fg="blue").pack(pady=5)
-
+        tk.Label(main_frame, text=f"📚 В игре загружено слов: {len(WORDS)}", font=("Arial", 14), fg="blue").pack(pady=5)
         tk.Button(main_frame, text="Назад в меню", font=("Arial", 18), command=self.show_menu).pack(pady=20)
 
     def start_settings(self, mode):
@@ -258,7 +251,6 @@ class AliasGame:
         for idx, color in enumerate(COLORS):
             row = idx // 3
             col = idx % 3
-
             btn_text = COLOR_NAMES.get(color, color)
 
             if color in self.team_colors:
@@ -269,7 +261,6 @@ class AliasGame:
                 btn = tk.Button(grid_frame, text=btn_text, font=("Arial", 16, "bold"),
                                 bg=color, fg=fg_color, width=15, height=2,
                                 command=lambda c=color: self.select_color_handler(c))
-
             btn.grid(row=row, column=col, padx=10, pady=10)
 
     def select_color_handler(self, color):
@@ -285,8 +276,44 @@ class AliasGame:
         self.team_scores = [0] * len(self.team_names)
         self.current_team = 0
         self.used_words = []
+        self.show_round_waiting_screen()
 
-        print(f"Режим: {self.mode}, Игроки: {self.team_names}, Цвета: {self.team_colors}, Очки: {self.team_scores}")
+    def show_round_waiting_screen(self):
+        self.clear_window()
+        main_frame = tk.Frame(self.root)
+        main_frame.pack(expand=True)
+
+        current_name = self.team_names[self.current_team]
+        current_color = self.team_colors[self.current_team]
+
+        tk.Label(main_frame, text=f"Очередь: {current_name}", font=("Arial", 36, "bold"), fg=current_color).pack(
+            pady=20)
+        tk.Label(main_frame, text="Приготовьтесь! Нажмите кнопку для старта раунда.", font=("Arial", 18)).pack(pady=10)
+
+        score_frame = tk.LabelFrame(main_frame, text=" Текущий счёт ", font=("Arial", 16, "bold"), padx=20, pady=15)
+        score_frame.pack(pady=30, fill=tk.X)
+
+        for i in range(len(self.team_names)):
+            name_label = tk.Label(score_frame, text=self.team_names[i], font=("Arial", 16), anchor="w")
+            name_label.grid(row=i, column=0, padx=20, pady=4, sticky="w")
+
+            score_label = tk.Label(score_frame, text=f"{self.team_scores[i]} / {self.game_settings['win_score']}",
+                                   font=("Arial", 16, "bold"), fg=self.team_colors[i], anchor="e")
+            score_label.grid(row=i, column=1, padx=20, pady=4, sticky="e")
+
+        buttons_frame = tk.Frame(main_frame)
+        buttons_frame.pack(pady=20)
+
+        tk.Button(buttons_frame, text="Выйти в меню", font=("Arial", 16), bg="gray", fg="white",
+                  command=self.show_menu).pack(side=tk.LEFT, padx=15)
+
+        tk.Button(buttons_frame, text="НАЧАТЬ РАУНД 🚀", font=("Arial", 18, "bold"), bg="green", fg="white",
+                  command=self.placeholder_start_game).pack(side=tk.RIGHT, padx=15)
+
+    def next_turn_rotation(self):
+        self.current_team = (self.current_team + 1) % len(self.team_names)
+        self.show_round_waiting_screen()
+
 
     def clear_window(self):
         for w in self.root.winfo_children():
