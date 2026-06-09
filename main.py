@@ -9,10 +9,8 @@ def load_words_from_file(filename="words.txt"):
         with open(filename, "r", encoding="utf-8") as f:
             for line in f:
                 word = line.strip()
-                if word and not word.startswith("#"):
-                    words.append(word)
+                if word and not word.startswith("#"): words.append(word)
     if not words:
-        print(f"Предупреждение: файл {filename} не найден. Используются стандартные слова.")
         words = ["самолёт", "компьютер", "дерево", "кофе", "программист", "телефон", "книга", "школа"]
     return words
 
@@ -34,19 +32,13 @@ class AliasGame:
         self.root.title("Alies")
         self.root.attributes("-fullscreen", True)
         self.root.bind("<Escape>", lambda e: self.root.attributes("-fullscreen", False))
-
         self.mode = None
         self.team_scores = []
         self.team_names = []
         self.team_colors = []
         self.current_team = 0
         self.timer_id = None
-        self.game_settings = {
-            "round_time": 60,
-            "win_score": 25,
-            "player_count": 3,
-            "team_count": 2
-        }
+        self.game_settings = {"round_time": 60, "win_score": 25, "player_count": 3, "team_count": 2}
         self.used_words = []
         self.current_word = ""
         self.show_menu()
@@ -246,7 +238,7 @@ class AliasGame:
 
     def choose_next_player_color(self):
         if self.current_color_index >= len(self.team_colors):
-            print("Ввод завершен. Переход к созданию игры в следующем коммите.")
+            self.start_game()
             return
         self.clear_window()
         main_frame = tk.Frame(self.root)
@@ -279,6 +271,7 @@ class AliasGame:
 
     def choose_next_team_color(self):
         if self.current_color_index >= len(self.team_colors):
+            self.start_game()
             return
         self.clear_window()
         main_frame = tk.Frame(self.root)
@@ -303,6 +296,119 @@ class AliasGame:
         self.team_colors[self.current_color_index] = color
         self.current_color_index += 1
         self.choose_next_team_color()
+
+    def get_new_word(self):
+        available = [word for word in WORDS if word not in self.used_words]
+        if not available:
+            self.used_words = []
+            available = WORDS.copy()
+            messagebox.showinfo("Слова закончились!", "Все слова были использованы! Начинаем новый круг.")
+        new_word = random.choice(available)
+        self.used_words.append(new_word)
+        return new_word
+
+    def start_game(self):
+        self.stop_timer()
+        self.time_left = self.game_settings["round_time"]
+        self.team_scores = [0] * len(self.team_colors)
+        self.current_team = 0
+        self.used_words = []
+        self.clear_window()
+        self.create_widgets()
+        self.current_word = self.get_new_word()
+        self.word_label.config(text=self.current_word)
+        self.update_timer()
+
+    def next_turn(self):
+        self.stop_timer()
+        self.current_team = (self.current_team + 1) % len(self.team_colors)
+        self.time_left = self.game_settings["round_time"]
+        self.info_label.config(text=f"Ходит: {self.team_names[self.current_team]}", fg=self.team_colors[self.current_team])
+        self.turn_label.config(text=f"Очередь: {' → '.join(self.team_names)}")
+        self.word_label.config(fg=self.team_colors[self.current_team])
+        self.score_label.config(text=self.get_score_text())
+        self.current_word = self.get_new_word()
+        self.word_label.config(text=self.current_word)
+        self.update_timer()
+
+    def create_widgets(self):
+        main_frame = tk.Frame(self.root)
+        main_frame.pack(expand=True, fill=tk.BOTH)
+        left_frame = tk.Frame(main_frame, width=280, bg="#f0f0f0")
+        left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
+        left_frame.pack_propagate(False)
+        tk.Label(left_frame, text="📖 ИНФОРМАЦИЯ", font=("Arial", 18, "bold"), bg="#f0f0f0").pack(pady=20)
+        self.remaining_label = tk.Label(left_frame, text="", font=("Arial", 12), bg="#f0f0f0", fg="green")
+        self.remaining_label.pack(pady=10)
+        tk.Label(left_frame, text="\n📌 Советы:", font=("Arial", 14, "bold"), bg="#f0f0f0").pack(pady=10)
+        tips = ("✓ Используйте синонимы\n✓ Называйте противоположности\n✓ Описывайте свойства\n✓ Приводите примеры\n✓ Используйте жесты\n✓ Разбивайте сложные слова")
+        tk.Label(left_frame, text=tips, font=("Arial", 11), bg="#f0f0f0", justify=tk.LEFT).pack(pady=5)
+
+        right_frame = tk.Frame(main_frame)
+        right_frame.pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
+        top_frame = tk.Frame(right_frame)
+        top_frame.pack(fill=tk.X, pady=10)
+        tk.Button(top_frame, text="❓ Ход игры", font=("Arial", 14), command=self.show_game_turn).pack(side=tk.LEFT, padx=20)
+        tk.Button(top_frame, text="🏠 В меню", font=("Arial", 14), command=self.show_menu).pack(side=tk.RIGHT, padx=20)
+        self.info_label = tk.Label(right_frame, text=f"Ходит: {self.team_names[self.current_team]}", font=("Arial", 24), fg=self.team_colors[self.current_team])
+        self.info_label.pack(pady=10)
+        self.turn_label = tk.Label(right_frame, text=f"Очередь: {' → '.join(self.team_names)}", font=("Arial", 14), fg="gray")
+        self.turn_label.pack(pady=5)
+        self.word_label = tk.Label(right_frame, font=("Arial", 48, "bold"), fg=self.team_colors[self.current_team])
+        self.word_label.pack(pady=40)
+        self.timer_label = tk.Label(right_frame, font=("Arial", 28))
+        self.timer_label.pack(pady=10)
+        self.score_label = tk.Label(right_frame, text=self.get_score_text(), font=("Arial", 20), justify=tk.LEFT)
+        self.score_label.pack(pady=20)
+        btns = tk.Frame(right_frame)
+        btns.pack(pady=30)
+        tk.Button(btns, text="УГАДАЛИ ✓", font=("Arial", 20, "bold"), width=12, bg="#4CAF50", fg="white", command=self.correct).pack(side=tk.LEFT, padx=20)
+        tk.Button(btns, text="ПРОПУСК ✗", font=("Arial", 20, "bold"), width=12, bg="#FF5722", fg="white", command=self.skip_word).pack(side=tk.RIGHT, padx=20)
+        tk.Label(right_frame, text=f"🎯 Цель: {self.game_settings['win_score']} слов", font=("Arial", 14)).pack(pady=5)
+        tk.Label(right_frame, text="⚠️ За пропуск слова -1 балл (не ниже 0)", font=("Arial", 12), fg="red").pack(pady=5)
+        self.update_remaining_words()
+
+    def update_remaining_words(self):
+        remaining = len([w for w in WORDS if w not in self.used_words])
+        total = len(WORDS)
+        self.remaining_label.config(text=f"📚 Осталось слов: {remaining}/{total}")
+
+    def get_score_text(self):
+        scores = []
+        for i, (name, score) in enumerate(zip(self.team_names, self.team_scores)):
+            if i == self.current_team: scores.append(f"👉 {name}: {score} 👈")
+            else: scores.append(f"{name}: {score}")
+        return "\n".join(scores)
+
+    def correct(self):
+        self.team_scores[self.current_team] += 1
+        self.score_label.config(text=self.get_score_text())
+        if self.team_scores[self.current_team] >= self.game_settings["win_score"]:
+            print("Раунд завершен!")
+        else:
+            self.current_word = self.get_new_word()
+            self.word_label.config(text=self.current_word)
+            self.update_remaining_words()
+
+    def skip_word(self):
+        if self.team_scores[self.current_team] > 0: self.team_scores[self.current_team] -= 1
+        self.score_label.config(text=self.get_score_text())
+        self.current_word = self.get_new_word()
+        self.word_label.config(text=self.current_word)
+        self.update_remaining_words()
+
+    def update_timer(self):
+        self.timer_label.config(text=f"⏱️ Время: {self.time_left} сек")
+        if self.time_left > 0:
+            self.time_left -= 1
+            self.timer_id = self.root.after(1000, self.update_timer)
+        else:
+            self.end_round()
+
+    def end_round(self):
+        self.stop_timer()
+        messagebox.showinfo("Время вышло!", f"Время {self.team_names[self.current_team]} истекло!\nХод переходит следующему.")
+        self.next_turn()
 
     def stop_timer(self):
         if self.timer_id:
