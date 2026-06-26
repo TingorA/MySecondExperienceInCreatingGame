@@ -186,7 +186,7 @@ class AliasGame:
         score_frame.pack(pady=15)
         tk.Label(score_frame, text="Слов для победы:", font=("Arial", 20)).pack(side=tk.LEFT, padx=15)
         self.score_var = tk.IntVar(value=self.game_settings["win_score"])
-        for s in SCORE_OPTIONS:
+        for s in SCORE_OPTIONS: 
             tk.Radiobutton(score_frame, text=str(s), font=("Arial", 16),
                            variable=self.score_var, value=s).pack(side=tk.LEFT, padx=8)
 
